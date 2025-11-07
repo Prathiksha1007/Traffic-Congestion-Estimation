@@ -1,3 +1,6 @@
+
+---
+
 # 🚦 Traffic Congestion Reduction using SARSA Reinforcement Learning
 
 <h3 align="center">
@@ -8,114 +11,93 @@
 <img alt="Alt text" src="https://img.shields.io/badge/nVIDIA-%2376B900.svg?style=for-the-badge&logo=nVIDIA&logoColor=white"/>
 </h3>
 
-#### CS 695 - Decision Making and Reinforcement Learning (GMU)
+!![Demo Video](demo.mp4)
 
-![Demo Video](demo.mp4)
+---
 
-#### Installation (Docker)
+## 🧠 Project Overview
 
-1. Clone the repository
+This project simulates a **smart traffic management system** using the **SARSA (State-Action-Reward-State-Action)** algorithm to dynamically control traffic lights and reduce congestion.
+Unlike traditional systems with fixed signal timings, this model **learns from real-time conditions** to optimize signal switching, minimize waiting times, and improve overall flow — even during peak hours.
 
-`git clone https://github.com/praneethravuri/traffic-congestion-reduction-with-SARSA.git`
+A major enhancement in this version is the **Emergency Vehicle Priority System**, which detects emergency vehicles (like ambulances or fire trucks) and instantly adjusts traffic lights to ensure their safe and rapid passage.
 
-2. Build Docker Image
+---
 
-`docker build -t sarsa-traffic .`
+## ⚙️ How It Works
 
-3.  Configure Environment for Graphical Display
+The simulation is built using **Python (Pygame)** and models a four-way intersection.
+Key features include:
 
-    1. For Linux/WSL Users: `export DISPLAY=$(cat /etc/resolv.conf | grep nameserver | awk '{print $2}'):0`
+* **Dynamic traffic light control** based on congestion.
+* **Real-time vehicle generation** with direction and color-coded intentions:
 
-    2. For Windows Users (WSL): ```export DISPLAY=$(grep nameserver /etc/resolv.conf | cut -d ' ' -f 2):0.0```
+  * 🟧 **Orange:** Straight
+  * 🔵 **Blue:** Left turn
+  * 💗 **Pink:** Right turn
+* **Adaptive SARSA learning** that improves decisions over time.
+* **Emergency vehicle detection & override**, where normal SARSA control is temporarily paused to give priority to emergency vehicles.
 
-4. Running the application
+---
 
-    1. Running main.py: ```docker run -it -e DISPLAY=$DISPLAY -e XDG_RUNTIME_DIR=/tmp sarsa-traffic python main.py```
+## 🚨 Emergency Vehicle Handling
 
-    2. Running model.py: ```docker run -it -e DISPLAY=$DISPLAY -e XDG_RUNTIME_DIR=/tmp sarsa-traffic python model.py```
+When an emergency vehicle is detected:
 
-### Introduction and Motivation
+1. SARSA temporarily **pauses its learning update** to avoid corrupting the Q-table.
+2. The system **forces a green signal** in the emergency vehicle’s direction.
+3. Once the emergency vehicle crosses, SARSA **resumes normal learning and control**.
 
-Urban areas around the globe are increasingly grappling with the challenge of traffic
-congestion. This not only leads to longer commute times but also contributes to
-environmental pollution and stress. Traditional traffic control systems, like standard
-traffic lights, often fail to keep up with the dynamic and unpredictable nature of road
-traffic. To address these challenges, our team has been working on a cutting-edge
-solution.
+This ensures smooth integration of emergency response handling without disrupting ongoing reinforcement learning.
 
-### Code Structure Analysis
+---
 
-The project utilizes Python's Pygame library to simulate traffic at a four-way intersection,
-detailed across several files like Crossing.py, Intersection.py, Traffic_lights.py,
-Vehicle.py, Main.py, Model.py, Sarsa.py, and Train.py. The first four files create the
-intersection's visual components, including roads, crossings, traffic lights, and vehicles.
-Vehicles are generated for each lane with attributes like position and direction assigned
-randomly, and their intended direction after passing signals is indicated by color coding:
-orange for straight, blue for left, and pink for right.
-Traffic lights operate in cycles, randomly starting with a green light for 10 seconds,
-followed by yellow for 2 seconds, then red, mimicking real-world traffic light patterns. In
-Vehicle.py, threshold points are set for each lane to indicate where vehicles should stop
-for red or yellow lights, and for turning vehicles, these points mark where turns should
-be executed. The simulation also factors in realistic gaps between vehicles at red lights,
-enhancing the authenticity and management efficiency of the traffic system.
+## 🧩 Code Structure
 
-### Reward Calculation for SARSA
+| File                  | Description                                                      |
+| --------------------- | ---------------------------------------------------------------- |
+| `main.py`             | Runs the traffic simulation and connects all modules             |
+| `intersection.py`     | Defines the intersection layout and signal behavior              |
+| `crossing.py`         | Handles vehicle movement and road configuration                  |
+| `traffic_lights.py`   | Manages light cycles and signal state transitions                |
+| `vehicle.py`          | Creates and updates vehicle behavior (including emergency logic) |
+| `sarsa.py`            | Implements the SARSA learning algorithm                          |
+| `model.py`            | Applies the trained SARSA model to control signals               |
+| `train.py`            | Trains the model through generations and saves the Q-table       |
+| `dashboard.py`        | (Optional) Displays performance metrics or visualization         |
+| `simulation_logs.csv` | Stores logged data for analysis                                  |
+| `requirements.txt`    | Dependencies list                                                |
 
-In our project, we use two key indicators to assess traffic congestion and calculate
-rewards within a SARSA-based traffic management system. The Delay Time Indicator
-(DTI) [1] measures the waiting time of vehicles at red lights, summing up these times for
-each lane. Alongside, the Vehicle Count [1] tracks the number of vehicles in each lane
-when the light is red. Together, these provide a comprehensive view of traffic flow and
-congestion.
-Rewards for each lane are calculated based on the percentage change in congestion
-after SARSA's decision-making. Significant congestion reduction (over 50%) earns a
-high reward of 20 points, moderate reduction (25%-49%) gets 10 points, and minor
-improvement (0%-24%) receives 5 points. Conversely, increasing congestion results in
-penalties: over 50% increase deducts 20 points, 25%-49% increase takes away 10
-points, and less than 24% increase reduces the reward by 5 points. This system
-encourages strategies to effectively reduce congestion, aiming for efficient traffic
-management at intersections.
+---
 
-### SARSA Implementation
+## 🧮 SARSA Learning Details
 
-The SARSA (State-Action-Reward-State-Action) algorithm in this code is a
-reinforcement learning method applied to manage traffic lights at intersections, aiming
-to optimize traffic flow and reduce congestion. The algorithm learns a policy by mapping
-states of the environment, which are the traffic conditions including vehicle positions
-and movements, to appropriate actions. This policy is developed through trial and error,
-with the traffic light controller, acting as the agent, receiving rewards or penalties based
-on action outcomes.
-The state space is defined by a combination of factors including the number of vehicles
-that can be generated in a lane, the number of lanes, and the states of traffic lights (red,
-yellow, green). This provides a comprehensive representation of various traffic
-scenarios. The action space includes four actions, each corresponding to changing the
-traffic light in one of the four directions: north, east, south, or west. Key parameters of
-SARSA in this implementation are the learning rate (alpha), discount factor (gamma),
-and exploration rate (epsilon). The learning rate determines the weight of new
-information, the discount factor values future rewards, and the exploration rate balances
-between exploring new actions and exploiting known ones.
-An epsilon decay mechanism is employed to transition the model from exploration to
-exploitation; it starts high to encourage exploration and gradually decreases to allow
-more reliance on the learned policy. Specifically, the model explores in the first 90% of
-iterations and exploits in the remaining 10%.
-The `apply_action` function enacts the chosen action, altering the traffic light state at the
-intersection according to current conditions and the learned policy. This interaction
-between SARSA and the traffic simulation forms the learning process's core, enabling
-continuous adaptation and enhancement of the traffic light control policy.
-The `train.py` file trains the model over 50 generations, advancing to the next
-generation once 10,000 rewards are accumulated in each. This approach allows the
-model to learn from various traffic scenarios. After each generation, the learned Q-table,
-which records the value of actions in different states, is saved to `sarsa_q_table.npy`,
-and both the simulation and its parameters are reset. This ensures fresh learning in
-each generation and prevents bias from earlier experiences. Post-training, `model.py`
-uses the best Q-values from `sarsa_q_table.npy` to determine optimal actions in the
-simulation. This phase demonstrates the application of learned strategies in real-time
-traffic management, utilizing the training phase's accumulated knowledge for effective
-traffic light control.
+The SARSA agent learns the optimal action (signal change) for each intersection state using:
 
-|                  α = 0.05, γ = 0.9                  |                  α = 0.05, γ = 0.95                  |
-| :-------------------------------------------------: | :--------------------------------------------------: |
-| <img src="./plots/alpha_0_05_gamma_0_9.png" alt=""> | <img src="./plots/alpha_0_05_gamma_0_95.png" alt=""> |
+* **Learning rate (α):** Controls how much new information overrides old knowledge
+* **Discount factor (γ):** Balances immediate vs. future rewards
+* **Exploration rate (ε):** Governs random exploration vs. using learned policy
+
+The reward function uses two congestion indicators:
+
+* **Delay Time Indicator (DTI):** Average waiting time of vehicles
+* **Vehicle Count:** Number of vehicles per lane
+
+Rewards are given for congestion reduction and penalties for increases.
+SARSA updates Q-values continuously to favor actions that minimize delay and maximize flow efficiency.
+
+---
+
+## 📊 Training and Results
+
+Training is done across multiple generations (e.g., 50), where each generation consists of 10,000 reward evaluations.
+After each generation, the **Q-table** (`sarsa_q_table.npy`) is saved, representing learned signal policies.
+
+Plots below show the convergence behavior across different hyperparameter settings:
+
+|               α = 0.05, γ = 0.9              |               α = 0.05, γ = 0.95              |
+| :------------------------------------------: | :-------------------------------------------: |
+| <img src="./plots/alpha_0_05_gamma_0_9.png"> | <img src="./plots/alpha_0_05_gamma_0_95.png"> |
 
 |               α = 0.05, γ = 0.99              |               α = 0.1, γ = 0.9              |
 | :-------------------------------------------: | :-----------------------------------------: |
@@ -132,8 +114,8 @@ traffic light control.
 1. **Clone the repository**
 
    ```bash
-   git clone https://github.com/Prathiksha1007/Traffic-Congestion-Estimation.git
-   cd Traffic-Congestion-Estimation
+   git clone https://github.com/<your-username>/Traffic-Congestion-Control.git
+   cd Traffic-Congestion-Control
    ```
 
 2. **Install dependencies**
